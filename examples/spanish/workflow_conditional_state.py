@@ -22,7 +22,7 @@ from agent_framework import Agent, AgentExecutorResponse, WorkflowBuilder, Workf
 from agent_framework.openai import OpenAIChatClient
 from azure.identity.aio import DefaultAzureCredential, get_bearer_token_provider
 from dotenv import load_dotenv
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 from typing_extensions import Never
 
 load_dotenv(override=True)
@@ -42,7 +42,7 @@ elif API_HOST == "github":
     client = OpenAIChatClient(
         base_url="https://models.github.ai/inference",
         api_key=os.environ["GITHUB_TOKEN"],
-        model_id=os.getenv("GITHUB_MODEL", "openai/gpt-5-mini"),
+        model_id=os.getenv("GITHUB_MODEL", "openai/gpt-4.1-mini"),
     )
 else:
     client = OpenAIChatClient(
@@ -62,10 +62,7 @@ def parse_review_decision(message: Any) -> ReviewDecision | None:
     if not isinstance(message, AgentExecutorResponse):
         return None
 
-    try:
-        return ReviewDecision.model_validate_json(message.agent_response.text)
-    except ValidationError:
-        return None
+    return message.agent_response.value
 
 
 # Funciones de condición — reciben el mensaje del ejecutor anterior.
@@ -103,7 +100,7 @@ reviewer = Agent(
         "Define decision=REVISION_NEEDED si necesita mejoras.\n"
         "En feedback, explica brevemente tu razonamiento y da cambios accionables cuando aplique."
     ),
-    response_format=ReviewDecision,
+    default_options={"response_format": ReviewDecision},
 )
 
 editor = Agent(
@@ -143,7 +140,7 @@ async def publisher(_response: AgentExecutorResponse, ctx: WorkflowContext[Never
 # add_edge(reviewer, editor, condition=needs_revision) se activa cuando needs_revision() retorna True.
 # add_edge(editor, reviewer) crea un bucle acotado de revisión-edición.
 workflow = (
-    WorkflowBuilder(start_executor=writer, max_iterations=8)
+    WorkflowBuilder(start_executor=writer, max_iterations=20)
     .add_edge(writer, store_post_text)
     .add_edge(store_post_text, reviewer)
     .add_edge(reviewer, publisher, condition=is_approved)

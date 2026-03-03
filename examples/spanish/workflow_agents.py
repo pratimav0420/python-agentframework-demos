@@ -37,7 +37,7 @@ elif API_HOST == "github":
     client = OpenAIChatClient(
         base_url="https://models.github.ai/inference",
         api_key=os.environ["GITHUB_TOKEN"],
-        model_id=os.getenv("GITHUB_MODEL", "openai/gpt-4o-mini"),
+        model_id=os.getenv("GITHUB_MODEL", "openai/gpt-4.1-mini"),
     )
 else:
     client = OpenAIChatClient(
@@ -76,7 +76,10 @@ async def main():
     prompt = "Escribe una publicación de LinkedIn de 2 frases: \"Por qué tu piloto de IA se ve bien, pero falla en producción.\""
     print(f"Prompt: {prompt}\n")
     events = await workflow.run(prompt)
-    print(events.get_outputs())
+
+    for output in events.get_outputs():
+        print("===== Salida =====")
+        print(output)
 
     if async_credential:
         await async_credential.close()

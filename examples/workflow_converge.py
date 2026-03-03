@@ -36,7 +36,7 @@ elif API_HOST == "github":
     client = OpenAIChatClient(
         base_url="https://models.github.ai/inference",
         api_key=os.environ["GITHUB_TOKEN"],
-        model_id=os.getenv("GITHUB_MODEL", "openai/gpt-5-mini"),
+        model_id=os.getenv("GITHUB_MODEL", "openai/gpt-4.1-mini"),
     )
 else:
     client = OpenAIChatClient(
@@ -60,10 +60,7 @@ def parse_review_result(message: Any) -> ReviewResult | None:
     if not isinstance(message, AgentExecutorResponse):
         return None
 
-    try:
-        return ReviewResult.model_validate_json(message.agent_response.text)
-    except Exception:
-        return None
+    return message.agent_response.value
 
 
 def is_approved(message: Any) -> bool:
@@ -104,7 +101,7 @@ reviewer = Agent(
         "- feedback: concise, actionable feedback\n"
         "- clarity, completeness, accuracy, structure: individual scores (0-100)"
     ),
-    response_format=ReviewResult,
+    default_options={"response_format": ReviewResult},
 )
 
 

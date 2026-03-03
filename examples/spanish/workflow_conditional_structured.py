@@ -24,7 +24,7 @@ from agent_framework import Agent, AgentExecutorResponse, WorkflowBuilder, Workf
 from agent_framework.openai import OpenAIChatClient
 from azure.identity.aio import DefaultAzureCredential, get_bearer_token_provider
 from dotenv import load_dotenv
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 from typing_extensions import Never
 
 load_dotenv(override=True)
@@ -44,7 +44,7 @@ elif API_HOST == "github":
     client = OpenAIChatClient(
         base_url="https://models.github.ai/inference",
         api_key=os.environ["GITHUB_TOKEN"],
-        model_id=os.getenv("GITHUB_MODEL", "openai/gpt-5-mini"),
+        model_id=os.getenv("GITHUB_MODEL", "openai/gpt-4.1-mini"),
     )
 else:
     client = OpenAIChatClient(
@@ -66,10 +66,7 @@ def parse_review_decision(message: Any) -> ReviewDecision | None:
     if not isinstance(message, AgentExecutorResponse):
         return None
 
-    try:
-        return ReviewDecision.model_validate_json(message.agent_response.text)
-    except ValidationError:
-        return None
+    return message.agent_response.value
 
 
 def is_approved(message: Any) -> bool:
@@ -101,7 +98,7 @@ reviewer = Agent(
         "Si el borrador está listo, define decision=APPROVED e incluye la publicación lista para publicar en post_text. "
         "Si necesita cambios, define decision=REVISION_NEEDED y entrega feedback accionable."
     ),
-    response_format=ReviewDecision,
+    default_options={"response_format": ReviewDecision},
 )
 
 editor = Agent(

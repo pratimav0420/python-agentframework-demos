@@ -49,7 +49,7 @@ elif API_HOST == "github":
     client = OpenAIChatClient(
         base_url="https://models.github.ai/inference",
         api_key=os.environ["GITHUB_TOKEN"],
-        model_id=os.getenv("GITHUB_MODEL", "openai/gpt-5-mini"),
+        model_id=os.getenv("GITHUB_MODEL", "openai/gpt-4.1-mini"),
     )
 else:
     client = OpenAIChatClient(
@@ -78,7 +78,7 @@ classifier = Agent(
         "Question, Complaint, or Feedback. "
         "Return a JSON object with category, original_message, and reasoning."
     ),
-    response_format=ClassifyResult,
+    default_options={"response_format": ClassifyResult},
 )
 
 
@@ -87,7 +87,7 @@ classifier = Agent(
 @executor(id="extract_category")
 async def extract_category(response: AgentExecutorResponse, ctx: WorkflowContext[ClassifyResult]) -> None:
     """Parse the classifier's structured JSON output and send it downstream."""
-    result = ClassifyResult.model_validate_json(response.agent_response.text)
+    result: ClassifyResult = response.agent_response.value
     print(f"→ Classified as: {result.category} — {result.reasoning}")
     await ctx.send_message(result)
 

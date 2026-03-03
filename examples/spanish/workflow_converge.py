@@ -36,7 +36,7 @@ elif API_HOST == "github":
     client = OpenAIChatClient(
         base_url="https://models.github.ai/inference",
         api_key=os.environ["GITHUB_TOKEN"],
-        model_id=os.getenv("GITHUB_MODEL", "openai/gpt-5-mini"),
+        model_id=os.getenv("GITHUB_MODEL", "openai/gpt-4.1-mini"),
     )
 else:
     client = OpenAIChatClient(
@@ -60,19 +60,16 @@ def parse_review_result(message: Any) -> ReviewResult | None:
     if not isinstance(message, AgentExecutorResponse):
         return None
 
-    try:
-        return ReviewResult.model_validate_json(message.agent_response.text)
-    except Exception:
-        return None
+    return message.agent_response.value
 
 
-def esta_aprobado(message: Any) -> bool:
+def is_approved(message: Any) -> bool:
     """Verifica si el contenido está aprobado (alta calidad)."""
     result = parse_review_result(message)
     return result is not None and result.score >= 80
 
 
-def necesita_edicion(message: Any) -> bool:
+def needs_editing(message: Any) -> bool:
     """Enruta al editor cuando la calidad está debajo del umbral."""
     result = parse_review_result(message)
     return result is not None and result.score < 80
@@ -80,7 +77,7 @@ def necesita_edicion(message: Any) -> bool:
 
 writer = Agent(
     client=client,
-    name="Escritor",
+    name="Writer",
     instructions=(
         "Eres un excelente escritor de contenido. "
         "Crea contenido claro y atractivo basado en la solicitud del usuario. "
@@ -91,7 +88,7 @@ writer = Agent(
 
 reviewer = Agent(
     client=client,
-    name="Revisor",
+    name="Reviewer",
     instructions=(
         "Eres un experto revisor de contenido. "
         "Evalúa el contenido del escritor basándote en:\n"
@@ -104,7 +101,7 @@ reviewer = Agent(
         "- feedback: retroalimentación concisa y accionable\n"
         "- clarity, completeness, accuracy, structure: puntajes individuales (0-100)"
     ),
-    response_format=ReviewResult,
+    default_options={"response_format": ReviewResult},
 )
 
 
@@ -122,7 +119,7 @@ editor = Agent(
 
 publisher = Agent(
     client=client,
-    name="Publicador",
+    name="Publisher",
     instructions=(
         "Eres un agente de publicación. "
         "Recibes contenido aprobado o editado. "
@@ -132,7 +129,7 @@ publisher = Agent(
 
 summarizer = Agent(
     client=client,
-    name="Resumidor",
+    name="Summarizer",
     instructions=(
         "Eres un agente resumidor. "
         "Crea un informe de publicación final que incluya:\n"
@@ -146,13 +143,13 @@ summarizer = Agent(
 
 workflow = (
     WorkflowBuilder(
-        name="FlujoConvergenteContenido",
+        name="ContentConverge",
         start_executor=writer,
         description="Rutas condicionales que convergen antes del resumen final.",
     )
     .add_edge(writer, reviewer)
-    .add_edge(reviewer, publisher, condition=esta_aprobado)
-    .add_edge(reviewer, editor, condition=necesita_edicion)
+    .add_edge(reviewer, publisher, condition=is_approved)
+    .add_edge(reviewer, editor, condition=needs_editing)
     .add_edge(editor, publisher)
     .add_edge(publisher, summarizer)
     .build()
