@@ -114,8 +114,8 @@ legal = Agent(
     ),
 )
 
-# The summarizer Executor wraps an Agent to handle fan-in directly —
-# it formats the collected expert outputs and synthesizes a brief.
+# The summarizer Executor wraps an Agent that formats the collected
+# expert outputs and synthesizes them into a concise executive brief.
 summarizer = SummarizerExecutor(client=client)
 
 workflow = (

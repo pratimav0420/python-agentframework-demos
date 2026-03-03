@@ -140,7 +140,7 @@ async def publisher(response: AgentExecutorResponse, ctx: WorkflowContext[Never,
 # add_edge(reviewer, editor, condition=needs_revision) fires when needs_revision() returns True.
 # add_edge(editor, reviewer) creates a bounded revise-review loop.
 workflow = (
-    WorkflowBuilder(start_executor=writer, max_iterations=8)
+    WorkflowBuilder(start_executor=writer, max_iterations=20)
     .add_edge(writer, store_post_text)
     .add_edge(store_post_text, reviewer)
     .add_edge(reviewer, publisher, condition=is_approved)

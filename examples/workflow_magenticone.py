@@ -196,6 +196,6 @@ if __name__ == "__main__":
     if "--devui" in sys.argv:
         from agent_framework.devui import serve
 
-        serve(entities=[magentic_workflow], port=8101, auto_open=True)
+        serve(entities=[magentic_workflow], auto_open=True)
     else:
         asyncio.run(main())

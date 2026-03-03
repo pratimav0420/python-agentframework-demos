@@ -140,7 +140,7 @@ async def publisher(_response: AgentExecutorResponse, ctx: WorkflowContext[Never
 # add_edge(reviewer, editor, condition=needs_revision) se activa cuando needs_revision() retorna True.
 # add_edge(editor, reviewer) crea un bucle acotado de revisión-edición.
 workflow = (
-    WorkflowBuilder(start_executor=writer, max_iterations=8)
+    WorkflowBuilder(start_executor=writer, max_iterations=20)
     .add_edge(writer, store_post_text)
     .add_edge(store_post_text, reviewer)
     .add_edge(reviewer, publisher, condition=is_approved)

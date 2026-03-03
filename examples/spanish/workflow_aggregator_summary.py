@@ -114,8 +114,8 @@ legal = Agent(
     ),
 )
 
-# El ejecutor resumidor envuelve un Agent para manejar el fan-in directamente —
-# formatea las salidas expertas recopiladas y sintetiza un brief.
+# El ejecutor resumidor envuelve un Agent que formatea las salidas
+# expertas recopiladas y las sintetiza en un brief ejecutivo conciso.
 summarizer = SummarizerExecutor(client=client)
 
 workflow = (

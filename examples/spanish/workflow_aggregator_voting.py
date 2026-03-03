@@ -165,7 +165,7 @@ async def main() -> None:
         # Caso claro: los tres deberían coincidir
         "La app se crashea cada vez que intento subir una foto. Código de error 500.",
         # Keyword → feature_request (add, wish), Sentiment → bug (angry), Intent → bug (fix broken)
-        "Ojalá el botón de exportar funcionara. Please add a fix — ¡pierdo datos a diario!",
+        "Ojalá el botón de exportar funcionara. Por favor agrega una solución — ¡pierdo datos a diario!",
         # Keyword → bug (error, fail), Sentiment → feature_request (hopeful), Intent → feature_request (new ability)
         "La búsqueda actual falla con consultas largas — estaría increíble si pudieras agregar fuzzy matching.",
     ]

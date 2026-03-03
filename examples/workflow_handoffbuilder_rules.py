@@ -130,7 +130,10 @@ async def main() -> None:
     logger.info("Request: %s\n", request)
 
     result = await workflow.run(request)
-    print(result[-1].text)
+    # The handoff workflow outputs the full conversation as list[Message]
+    for output in result.get_outputs():
+        if isinstance(output, list):
+            print(output[-1].text)
 
     if async_credential:
         await async_credential.close()

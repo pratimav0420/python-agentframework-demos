@@ -63,13 +63,13 @@ def parse_review_result(message: Any) -> ReviewResult | None:
     return message.agent_response.value
 
 
-def esta_aprobado(message: Any) -> bool:
+def is_approved(message: Any) -> bool:
     """Verifica si el contenido está aprobado (alta calidad)."""
     result = parse_review_result(message)
     return result is not None and result.score >= 80
 
 
-def necesita_edicion(message: Any) -> bool:
+def needs_editing(message: Any) -> bool:
     """Enruta al editor cuando la calidad está debajo del umbral."""
     result = parse_review_result(message)
     return result is not None and result.score < 80
@@ -77,7 +77,7 @@ def necesita_edicion(message: Any) -> bool:
 
 writer = Agent(
     client=client,
-    name="Escritor",
+    name="Writer",
     instructions=(
         "Eres un excelente escritor de contenido. "
         "Crea contenido claro y atractivo basado en la solicitud del usuario. "
@@ -88,7 +88,7 @@ writer = Agent(
 
 reviewer = Agent(
     client=client,
-    name="Revisor",
+    name="Reviewer",
     instructions=(
         "Eres un experto revisor de contenido. "
         "Evalúa el contenido del escritor basándote en:\n"
@@ -119,7 +119,7 @@ editor = Agent(
 
 publisher = Agent(
     client=client,
-    name="Publicador",
+    name="Publisher",
     instructions=(
         "Eres un agente de publicación. "
         "Recibes contenido aprobado o editado. "
@@ -129,7 +129,7 @@ publisher = Agent(
 
 summarizer = Agent(
     client=client,
-    name="Resumidor",
+    name="Summarizer",
     instructions=(
         "Eres un agente resumidor. "
         "Crea un informe de publicación final que incluya:\n"
@@ -143,13 +143,13 @@ summarizer = Agent(
 
 workflow = (
     WorkflowBuilder(
-        name="FlujoConvergenteContenido",
+        name="ContentConverge",
         start_executor=writer,
         description="Rutas condicionales que convergen antes del resumen final.",
     )
     .add_edge(writer, reviewer)
-    .add_edge(reviewer, publisher, condition=esta_aprobado)
-    .add_edge(reviewer, editor, condition=necesita_edicion)
+    .add_edge(reviewer, publisher, condition=is_approved)
+    .add_edge(reviewer, editor, condition=needs_editing)
     .add_edge(editor, publisher)
     .add_edge(publisher, summarizer)
     .build()
